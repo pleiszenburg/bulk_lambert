@@ -35,7 +35,7 @@ def farnocchia(k, r, v, tofs, **kwargs):
         [result[1] for result in results] * u.km / u.s,
     )
 
-def propagate(orbit, time_of_flight, *, method=farnocchia, rtol=1e-10, **kwargs):
+def propagate(orbit, time_of_flight, *, rtol=1e-10, **kwargs):
     """Propagate an orbit some time and return the result.
     Parameters
     ----------
@@ -43,8 +43,6 @@ def propagate(orbit, time_of_flight, *, method=farnocchia, rtol=1e-10, **kwargs)
         Orbit object to propagate.
     time_of_flight : ~astropy.time.TimeDelta
         Time of propagation.
-    method : callable, optional
-        Propagation method, default to farnocchia.
     rtol : float, optional
         Relative tolerance, default to 1e-10.
     Returns
@@ -53,7 +51,7 @@ def propagate(orbit, time_of_flight, *, method=farnocchia, rtol=1e-10, **kwargs)
         Propagation coordinates.
     """
 
-    rr, vv = method(
+    rr, vv = farnocchia(
         orbit.attractor.k,
         orbit.r,
         orbit.v,
