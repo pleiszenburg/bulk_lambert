@@ -7,7 +7,7 @@ from ._jit import jit
 from .hyper import hyp2f1b
 
 @jit
-def izzo_fast(k, r1, r2, tof, M, numiter, rtol): # izzo
+def izzo(k, r1, r2, tof, M, numiter, rtol):
     """ Aplies izzo algorithm to solve Lambert's problem.
     Parameters
     ----------

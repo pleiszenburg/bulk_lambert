@@ -9,7 +9,7 @@ kms = u.km / u.s
 
 from astropy.coordinates import CartesianDifferential, CartesianRepresentation
 
-from .iod import izzo_fast
+from .iod import izzo as izzo_fast
 from .farnocchia import farnocchia as farnocchia_fast
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

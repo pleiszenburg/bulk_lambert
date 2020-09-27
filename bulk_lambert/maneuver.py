@@ -3,7 +3,7 @@ import astropy.units as u
 
 from numpy.linalg import norm
 
-from .izzo import lambert_izzo
+from .izzo import lambert as lambert_izzo
 
 class Maneuver:
     r"""Class to represent a Maneuver.

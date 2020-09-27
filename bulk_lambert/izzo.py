@@ -1,11 +1,11 @@
 
 import astropy.units as u
 
-from .iod import izzo_fast
+from .iod import izzo
 
 kms = u.km / u.s
 
-def lambert_izzo(k, r0, r, tof, M=0, numiter=35, rtol=1e-8): # lambert
+def lambert(k, r0, r, tof, M=0, numiter=35, rtol=1e-8):
     """Solves the Lambert problem using the Izzo algorithm.
     .. versionadded:: 0.5.0
     Parameters
@@ -34,7 +34,7 @@ def lambert_izzo(k, r0, r, tof, M=0, numiter=35, rtol=1e-8): # lambert
     r_ = r.to(u.km).value
     tof_ = tof.to(u.s).value
 
-    sols = izzo_fast(k_, r0_, r_, tof_, M, numiter, rtol)
+    sols = izzo(k_, r0_, r_, tof_, M, numiter, rtol)
 
     for v0, v in sols:
         yield v0 << kms, v << kms
