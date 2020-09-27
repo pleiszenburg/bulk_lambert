@@ -32,56 +32,26 @@ def propagate(
     rr, vv
     """
 
+    # STRIP UNITS
     k = orbit.attractor.k.to(u.km ** 3 / u.s ** 2).value
     r0 = orbit.r.to(u.km).value
     v0 = orbit.v.to(u.km / u.s).value
     tofs = times_of_flight.to(u.s).value
 
+    # Allocate memory
     rr = np.zeros((times_of_flight.shape[0], 3), dtype = 'f8')
     vv = np.zeros((times_of_flight.shape[0], 3), dtype = 'f8')
 
+    # Compute
     for idx, tof in enumerate(tofs):
         rr[idx, :], vv[idx, :] = farnocchia_fast(k, r0, v0, tof)
 
+    # ADD UNITS
     return rr * u.km, vv * u.km / u.s
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # LAMBERT
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-def _izzo_strip(k, r0, r, tof, M=0, numiter=35, rtol=1e-8): # lambert
-    """Solves the Lambert problem using the Izzo algorithm.
-    .. versionadded:: 0.5.0
-    Parameters
-    ----------
-    k : ~astropy.units.Quantity
-        Gravitational constant of main attractor (km^3 / s^2).
-    r0 : ~astropy.units.Quantity
-        Initial position (km).
-    r : ~astropy.units.Quantity
-        Final position (km).
-    tof : ~astropy.units.Quantity
-        Time of flight (s).
-    M : int, optional
-        Number of full revolutions, default to 0.
-    numiter : int, optional
-        Maximum number of iterations, default to 35.
-    rtol : float, optional
-        Relative tolerance of the algorithm, default to 1e-8.
-    Yields
-    ------
-    v0, v : tuple
-        Pair of velocity solutions.
-    """
-    k_ = k.to(u.km ** 3 / u.s ** 2).value
-    r0_ = r0.to(u.km).value
-    r_ = r.to(u.km).value
-    tof_ = tof.to(u.s).value
-
-    sols = izzo_fast(k_, r0_, r_, tof_, M, numiter, rtol)
-
-    for v0, v in sols:
-        yield v0 << kms, v << kms
 
 def lambert(
     orbit_i,
@@ -89,19 +59,30 @@ def lambert(
     epochs,
     tofs,
     short=True,
-    **kwargs,
+    M=0,
+    numiter=35,
+    rtol=1e-8,
 ):
     """Computes Lambert maneuver between two different points.
     Parameters
     ----------
+
     orbit_i: ~poliastro.twobody.Orbit
         Initial orbit
     orbit_f: ~poliastro.twobody.Orbit
         Final orbit
     method: function
         Method for solving Lambert's problem
+
     short: keyword, boolean
         Selects between short and long solution
+
+    M : int, optional
+        Number of full revolutions, default to 0.
+    numiter : int, optional
+        Maximum number of iterations, default to 35.
+    rtol : float, optional
+        Relative tolerance of the algorithm, default to 1e-8.
     """
 
     # Get initial algorithm conditions
@@ -112,8 +93,17 @@ def lambert(
     # Time of flight is solved by subtracting both orbit epochs
     tof = orbit_f.epoch - orbit_i.epoch
 
-    # Compute all possible solutions to the Lambert transfer
-    sols = list(_izzo_strip(k, r_i, r_f, tof, **kwargs))
+    # STRIP UNITS
+    k_ = k.to(u.km ** 3 / u.s ** 2).value
+    r_i_ = r_i.to(u.km).value # r0_
+    r_f_ = r.to(u.km).value # r_
+    tof_ = tof.to(u.s).value
+
+    # Compute
+    sols = list(izzo_fast(k_, r_i_, r_f_, tof_, M, numiter, rtol))
+
+    # ADD UNITS
+    sols = [((v0 << kms), (v << kms)) for v0, v in sols]
 
     # Return short or long solution
     if short:
