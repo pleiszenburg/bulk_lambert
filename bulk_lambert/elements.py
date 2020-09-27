@@ -6,6 +6,7 @@ from numpy.linalg import norm
 
 from .angles import E_to_nu, F_to_nu
 from ._jit import jit
+from .util import rotation_matrix
 
 @jit
 def rv_pqw(k, p, ecc, nu):
