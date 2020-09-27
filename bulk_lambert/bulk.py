@@ -1,9 +1,20 @@
+# -*- coding: utf-8 -*-
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# IMPORT
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 import astropy.units as u
 kms = u.km / u.s
 
+from astropy.coordinates import CartesianDifferential, CartesianRepresentation
+
 from .iod import izzo_fast
 from .farnocchia import farnocchia as farnocchia_fast
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# PROPAGATE
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 def _farnocchia_strip(k, r, v, tofs):
     """Propagates orbit.
@@ -68,6 +79,10 @@ def propagate(orbit, time_of_flight):
     )
 
     return cartesian
+
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# LAMBERT
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 def _izzo_strip(k, r0, r, tof, M=0, numiter=35, rtol=1e-8): # lambert
     """Solves the Lambert problem using the Izzo algorithm.
