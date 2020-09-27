@@ -35,7 +35,7 @@ def farnocchia(k, r, v, tofs):
         [result[1] for result in results] * u.km / u.s,
     )
 
-def propagate(orbit, time_of_flight, *, rtol=1e-10, **kwargs):
+def propagate(orbit, time_of_flight):
     """Propagate an orbit some time and return the result.
     Parameters
     ----------
@@ -56,8 +56,6 @@ def propagate(orbit, time_of_flight, *, rtol=1e-10, **kwargs):
         orbit.r,
         orbit.v,
         time_of_flight.reshape(-1).to(u.s),
-        rtol=rtol,
-        **kwargs
     )
 
     # TODO: Turn these into unit tests
