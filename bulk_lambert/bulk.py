@@ -11,7 +11,6 @@ import numpy as np
 from numpy.linalg import norm
 
 from .iod import izzo as izzo_fast
-from ._jit import jit
 from .farnocchia import farnocchia as farnocchia_fast
 from .util import time_range
 
@@ -149,7 +148,7 @@ def lambert(
 
             for M in range(0, M_max + 1):
 
-                solutions.extend(izzo_fast_(
+                for v1, v2 in izzo_fast(
                     k_,
                     rr_i_[epoch_idx, :],
                     rr_f_[epoch_idx + tof_step, :],
@@ -157,33 +156,14 @@ def lambert(
                     M,
                     numiter,
                     rtol,
-                ))
+                ):
+                    v1, v2 = v1 - vv_i_[epoch_idx, :], vv_f_[epoch_idx + tof_step, :] - v2
+                    solutions.append((
+                        M, v1, v2, norm(v1) + norm(v2),
+                    ))
 
-            solutions = [
-                (
-                    M,
-                    v1 - vv_i_[epoch_idx, :],
-                    vv_f_[epoch_idx + tof_step, :] - v2,
-                )
-                for M, v1, v2 in solutions
-            ]
-            solutions = [
-                (
-                    M,
-                    v1,
-                    v2,
-                    norm(v1) + norm(v2),
-                )
-                for M, v1, v2 in solutions
-            ]
             best = min(solutions, key = lambda solution: solutions[3])
             MM[epoch_idx, tof_idx], dv1[epoch_idx, tof_idx, :], dv2[epoch_idx, tof_idx, :], dv[epoch_idx, tof_idx] = best
 
     # ADD UNITS
     return epochs_select, tofs, dv * (u.km / u.s), MM, dv1 * (u.km / u.s), dv2 * (u.km / u.s)
-
-@jit
-def izzo_fast_(k, r1, r2, tof, M, numiter, rtol):
-
-    for v1, v2 in izzo_fast(k, r1, r2, tof, M, numiter, rtol):
-        yield M, v1, v2
