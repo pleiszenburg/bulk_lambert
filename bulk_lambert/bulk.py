@@ -18,19 +18,21 @@ from .farnocchia import farnocchia as farnocchia_fast
 
 def propagate(
     orbit,
-    times_of_flight,
+    times,
 ):
     """Propagate an orbit some times and return the results.
     Parameters
     ----------
     orbit : ~poliastro.twobody.Orbit
         Orbit object to propagate.
-    times_of_flight : ~astropy.time.TimeDelta
-        Time of propagation (time deltas).
+    times_of_flight : ~astropy.time.Time
+        Time of propagation.
     Returns
     -------
     rr, vv
     """
+
+    times_of_flight = times - orbit.epoch
 
     # STRIP UNITS
     k = orbit.attractor.k.to(u.km ** 3 / u.s ** 2).value
