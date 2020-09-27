@@ -29,7 +29,7 @@ def propagate(
         Time of propagation.
     Returns
     -------
-    rr, vv
+    rr[idx, dim], vv[idx, dim]
     """
 
     times_of_flight = times - orbit.epoch
