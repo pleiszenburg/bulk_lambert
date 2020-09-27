@@ -7,7 +7,7 @@
 import astropy.units as u
 kms = u.km / u.s
 
-from astropy.coordinates import CartesianDifferential, CartesianRepresentation
+import numpy as np
 
 from .iod import izzo as izzo_fast
 from .farnocchia import farnocchia as farnocchia_fast
@@ -16,69 +16,34 @@ from .farnocchia import farnocchia as farnocchia_fast
 # PROPAGATE
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-def _farnocchia_strip(k, r, v, tofs):
-    """Propagates orbit.
-    Parameters
-    ----------
-    k : ~astropy.units.Quantity
-        Standard gravitational parameter of the attractor.
-    r : ~astropy.units.Quantity
-        Position vector.
-    v : ~astropy.units.Quantity
-        Velocity vector.
-    tofs : ~astropy.units.Quantity
-        Array of times to propagate.
-    Returns
-    -------
-    rr : ~astropy.units.Quantity
-        Propagated position vectors.
-    vv : ~astropy.units.Quantity
-        Propagated velocity vectors.
-    """
-    k = k.to(u.km ** 3 / u.s ** 2).value
-    r0 = r.to(u.km).value
-    v0 = v.to(u.km / u.s).value
-    tofs = tofs.to(u.s).value
-
-    results = [farnocchia_fast(k, r0, v0, tof) for tof in tofs]
-
-    return (
-        [result[0] for result in results] * u.km,
-        [result[1] for result in results] * u.km / u.s,
-    ) # TODO: Rewrite to avoid iterating twice
-
-def propagate(orbit, time_of_flight):
-    """Propagate an orbit some time and return the result.
+def propagate(
+    orbit,
+    times_of_flight,
+):
+    """Propagate an orbit some times and return the results.
     Parameters
     ----------
     orbit : ~poliastro.twobody.Orbit
         Orbit object to propagate.
-    time_of_flight : ~astropy.time.TimeDelta
-        Time of propagation.
-    rtol : float, optional
-        Relative tolerance, default to 1e-10.
+    times_of_flight : ~astropy.time.TimeDelta
+        Time of propagation (time deltas).
     Returns
     -------
-    astropy.coordinates.CartesianRepresentation
-        Propagation coordinates.
+    rr, vv
     """
 
-    rr, vv = _farnocchia_strip(
-        orbit.attractor.k,
-        orbit.r,
-        orbit.v,
-        time_of_flight.reshape(-1).to(u.s), # TODO
-    )
+    k = orbit.attractor.k.to(u.km ** 3 / u.s ** 2).value
+    r0 = orbit.r.to(u.km).value
+    v0 = orbit.v.to(u.km / u.s).value
+    tofs = times_of_flight.to(u.s).value
 
-    # TODO: Turn these into unit tests
-    assert rr.ndim == 2
-    assert vv.ndim == 2
+    rr = np.zeros((times_of_flight.shape[0], 3), dtype = 'f8')
+    vv = np.zeros((times_of_flight.shape[0], 3), dtype = 'f8')
 
-    cartesian = CartesianRepresentation(
-        rr, differentials=CartesianDifferential(vv, xyz_axis=1), xyz_axis=1
-    )
+    for idx, tof in enumerate(tofs):
+        rr[idx, :], vv[idx, :] = farnocchia_fast(k, r0, v0, tof)
 
-    return cartesian
+    return rr * u.km, vv * u.km / u.s
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # LAMBERT
