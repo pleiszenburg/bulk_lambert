@@ -53,22 +53,6 @@ def propagate(orbit, time_of_flight, *, method=farnocchia, rtol=1e-10, **kwargs)
         Propagation coordinates.
     """
 
-    # Check if propagator fulfills orbit requirements
-    if orbit.ecc < 1.0 and method not in ELLIPTIC_PROPAGATORS:
-        raise ValueError(
-            "Can not use an parabolic/hyperbolic propagator for elliptical orbits."
-        )
-    elif orbit.ecc == 1.0 and method not in PARABOLIC_PROPAGATORS:
-        raise ValueError(
-            "Can not use an elliptic/hyperbolic propagator for parabolic orbits."
-        )
-    elif orbit.ecc > 1.0 and method not in HYPERBOLIC_PROPAGATORS:
-        raise ValueError(
-            "Can not use an elliptic/parabolic propagator for hyperbolic orbits."
-        )
-    else:
-        pass
-
     rr, vv = method(
         orbit.attractor.k,
         orbit.r,
@@ -87,10 +71,3 @@ def propagate(orbit, time_of_flight, *, method=farnocchia, rtol=1e-10, **kwargs)
     )
 
     return cartesian
-
-ELLIPTIC_PROPAGATORS = [farnocchia,]
-PARABOLIC_PROPAGATORS = [farnocchia,]
-HYPERBOLIC_PROPAGATORS = [farnocchia,]
-ALL_PROPAGATORS = list(
-    set(ELLIPTIC_PROPAGATORS) & set(PARABOLIC_PROPAGATORS) & set(HYPERBOLIC_PROPAGATORS)
-)
