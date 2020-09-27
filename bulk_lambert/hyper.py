@@ -1,7 +1,7 @@
 
 import numpy as np
 
-from poliastro.core._jit import jit
+from ._jit import jit
 
 @jit
 def hyp2f1b(x):

@@ -3,8 +3,7 @@ import numpy as np
 from numpy import cross, pi
 from numpy.linalg import norm
 
-from poliastro.core._jit import jit
-
+from ._jit import jit
 from .hyper import hyp2f1b
 
 @jit
