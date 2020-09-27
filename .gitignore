@@ -1,2 +1,3 @@
-__*__
+__*__/
 *.pyc
+.ipynb_checkpoints/
