@@ -11,6 +11,7 @@ import numpy as np
 from numpy.linalg import norm
 
 from .iod import izzo as izzo_fast
+from ._jit import jit
 from .farnocchia import farnocchia as farnocchia_fast
 from .util import time_range
 
@@ -110,6 +111,7 @@ def lambert(
     epochs = time_range(
         start = epoch_start,
         end = epoch_stop,
+        periods = rr_i.shape[0],
     )
     dt = epochs[1] - epochs[0]
     epochs_select = epochs[:-tof_steps_stop]
@@ -140,30 +142,79 @@ def lambert(
     MM = np.zeros(shape[:-1], dtype = 'u8')
 
     # Compute
+    _lambert_fast(
+        epochs_select_len,
+        tof_steps_start,
+        tof_steps_stop,
+        tofs_,
+        M_max,
+        rr_i_,
+        vv_i_,
+        rr_f_,
+        vv_f_,
+        k_,
+        numiter,
+        rtol,
+        MM,
+        dv,
+        dv1,
+        dv2,
+    )
+
+    # ADD UNITS
+    return epochs_select, tofs, dv * (u.km / u.s), MM, dv1 * (u.km / u.s), dv2 * (u.km / u.s)
+
+@jit
+def _lambert_fast(
+    epochs_select_len,
+    tof_steps_start,
+    tof_steps_stop,
+    tofs_,
+    M_max,
+    rr_i_,
+    vv_i_,
+    rr_f_,
+    vv_f_,
+    k_,
+    numiter,
+    rtol,
+    MM,
+    dv,
+    dv1,
+    dv2,
+):
+
+    solutions = []
+
     for epoch_idx in range(epochs_select_len):
 
         for tof_idx, (tof_step, tof_) in enumerate(zip(range(tof_steps_start, tof_steps_stop + 1), tofs_)):
 
-            solutions = []
+            solutions.clear()
 
             for M in range(0, M_max + 1):
 
-                for v1, v2 in izzo_fast(
-                    k_,
-                    rr_i_[epoch_idx, :],
-                    rr_f_[epoch_idx + tof_step, :],
-                    tof_,
-                    M,
-                    numiter,
-                    rtol,
-                ):
-                    v1, v2 = v1 - vv_i_[epoch_idx, :], vv_f_[epoch_idx + tof_step, :] - v2
-                    solutions.append((
-                        M, v1, v2, norm(v1) + norm(v2),
-                    ))
+                try:
+                    for v1, v2 in izzo_fast(
+                        k_,
+                        rr_i_[epoch_idx, :],
+                        rr_f_[epoch_idx + tof_step, :],
+                        tof_,
+                        M,
+                        numiter,
+                        rtol,
+                    ):
+                        v1, v2 = v1 - vv_i_[epoch_idx, :], vv_f_[epoch_idx + tof_step, :] - v2
+                        solutions.append((
+                            M, v1, v2, norm(v1) + norm(v2),
+                        ))
+                except:
+                    continue
 
-            best = min(solutions, key = lambda solution: solutions[3])
+            # best = min(solutions, key = lambda solution: solutions[3])
+            best = solutions[0]
+            for solution in solutions[1:]:
+                if solution[3] < best[3]:
+                    best = solution
+
             MM[epoch_idx, tof_idx], dv1[epoch_idx, tof_idx, :], dv2[epoch_idx, tof_idx, :], dv[epoch_idx, tof_idx] = best
-
-    # ADD UNITS
-    return epochs_select, tofs, dv * (u.km / u.s), MM, dv1 * (u.km / u.s), dv2 * (u.km / u.s)
