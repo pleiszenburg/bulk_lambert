@@ -2,7 +2,7 @@
 from astropy import units as u
 from astropy.coordinates import CartesianDifferential, CartesianRepresentation
 
-from poliastro.core.propagation import farnocchia as farnocchia_fast
+from .farnocchia import farnocchia as farnocchia_fast
 
 def farnocchia(k, r, v, tofs):
     """Propagates orbit.
