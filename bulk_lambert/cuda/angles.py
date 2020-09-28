@@ -25,15 +25,29 @@ def _kepler_equation_prime_hyper(F, M, ecc):
 
 
 @cuda.jit(device=True)
-def newton(regime, x0, args=(), tol=1.48e-08, maxiter=50):
+def newton_hyperbolic(x0, M, ecc, tol=1.48e-08, maxiter=50):
     p0 = 1.0 * x0
     for iter in range(maxiter):
-        if regime == "hyperbolic":
-            fval = _kepler_equation_hyper(p0, *args)
-            fder = _kepler_equation_prime_hyper(p0, *args)
-        else:
-            fval = _kepler_equation(p0, *args)
-            fder = _kepler_equation_prime(p0, *args)
+
+        fval = _kepler_equation_hyper(p0, M, ecc)
+        fder = _kepler_equation_prime_hyper(p0, M, ecc)
+
+        newton_step = fval / fder
+        p = p0 - newton_step
+        if abs(p - p0) < tol:
+            return p
+        p0 = p
+
+    return np.nan
+
+
+@cuda.jit(device=True)
+def newton_elliptic(x0, M, ecc, tol=1.48e-08, maxiter=50):
+    p0 = 1.0 * x0
+    for iter in range(maxiter):
+
+        fval = _kepler_equation(p0, M, ecc)
+        fder = _kepler_equation_prime(p0, M, ecc)
 
         newton_step = fval / fder
         p = p0 - newton_step
@@ -243,7 +257,7 @@ def M_to_E(M, ecc):
         E0 = M
     else:
         E0 = np.pi * np.sign(M)
-    E = newton("elliptic", E0, args=(M, ecc))
+    E = newton_elliptic(E0, M, ecc)
     return E
 
 
@@ -265,7 +279,7 @@ def M_to_F(M, ecc):
     This uses a Newton iteration on the hyperbolic Kepler equation.
     """
     F0 = np.arcsinh(M / ecc)
-    F = newton("hyperbolic", F0, args=(M, ecc), maxiter=100)
+    F = newton_hyperbolic(F0, M, ecc, maxiter=100)
     return F
 
 
