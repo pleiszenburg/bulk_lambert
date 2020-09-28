@@ -1,6 +1,5 @@
 
-import numpy as np
-from math import sqrt, pi
+from math import sqrt, pi, acos, acosh, nan
 
 from numba import cuda
 
@@ -26,7 +25,7 @@ def D_to_M_near_parabolic(D, ecc):
     assert abs(x) < 1
     S = S_x(ecc, x, 1e-12)
     return (
-        np.sqrt(2.0 / (1.0 + ecc)) * D + np.sqrt(2.0 / (1.0 + ecc) ** 3) * (D ** 3) * S
+        sqrt(2.0 / (1.0 + ecc)) * D + sqrt(2.0 / (1.0 + ecc) ** 3) * (D ** 3) * S
     )
 
 
@@ -40,7 +39,7 @@ def _kepler_equation_prime_near_parabolic(D, M, ecc):
     x = (ecc - 1.0) / (ecc + 1.0) * (D ** 2)
     assert abs(x) < 1
     S = dS_x_alt(ecc, x, 1e-12)
-    return np.sqrt(2.0 / (1.0 + ecc)) + np.sqrt(2.0 / (1.0 + ecc) ** 3) * (D ** 2) * S
+    return sqrt(2.0 / (1.0 + ecc)) + sqrt(2.0 / (1.0 + ecc) ** 3) * (D ** 2) * S
 
 
 @cuda.jit(device=True)
@@ -100,7 +99,7 @@ def M_to_D_near_parabolic(M, ecc, tol=1.48e-08, maxiter=50):
 
         D0 = D
 
-    return np.nan
+    return nan
 
 @cuda.jit(device=True)
 def nu_from_delta_t(delta_t, ecc, k=1.0, q=1.0, delta=1e-2):
@@ -131,7 +130,7 @@ def nu_from_delta_t(delta_t, ecc, k=1.0, q=1.0, delta=1e-2):
         E = M_to_E((M + pi) % (2 * pi) - pi, ecc)
         nu = E_to_nu(E, ecc)
     elif 1 - delta <= ecc < 1:
-        E_delta = np.arccos((1 - delta) / ecc)
+        E_delta = acos((1 - delta) / ecc)
         # We compute M assuming we are in the strong elliptic case
         # and verify later
         n = sqrt(k * (1 - ecc) ** 3 / q ** 3)
@@ -156,7 +155,7 @@ def nu_from_delta_t(delta_t, ecc, k=1.0, q=1.0, delta=1e-2):
         D = M_to_D(M)
         nu = D_to_nu(D)
     elif 1 < ecc <= 1 + delta:
-        F_delta = np.arccosh((1 + delta) / ecc)
+        F_delta = acosh((1 + delta) / ecc)
         # We compute M assuming we are in the strong hyperbolic case
         # and verify later
         n = sqrt(k * (ecc - 1) ** 3 / q ** 3)
