@@ -258,7 +258,7 @@ def M_to_E(M, ecc):
     else:
         sign = -1.0 if M < 0.0 else (0.0 if M == 0.0 else 1.0)
         E0 = np.pi * sign
-    E = newton_elliptic(E0, M, ecc)
+    E = newton_elliptic(E0, M, ecc, tol=1.48e-08, maxiter=50)
     return E
 
 
@@ -280,7 +280,7 @@ def M_to_F(M, ecc):
     This uses a Newton iteration on the hyperbolic Kepler equation.
     """
     F0 = np.arcsinh(M / ecc)
-    F = newton_hyperbolic(F0, M, ecc, maxiter=100)
+    F = newton_hyperbolic(F0, M, ecc, tol=1.48e-08, maxiter=50)
     return F
 
 
