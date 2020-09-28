@@ -1,7 +1,7 @@
 
 import numpy as np
 
-from .._jit import jit
+from numba import cuda
 
 from .angles import (
     # D_to_M,
@@ -19,7 +19,7 @@ from .angles import (
 )
 
 
-@jit
+@cuda.jit(device=True)
 def D_to_M_near_parabolic(D, ecc):
     x = (ecc - 1.0) / (ecc + 1.0) * (D ** 2)
     assert abs(x) < 1
@@ -29,12 +29,12 @@ def D_to_M_near_parabolic(D, ecc):
     )
 
 
-@jit
+@cuda.jit(device=True)
 def _kepler_equation_near_parabolic(D, M, ecc):
     return D_to_M_near_parabolic(D, ecc) - M
 
 
-@jit
+@cuda.jit(device=True)
 def _kepler_equation_prime_near_parabolic(D, M, ecc):
     x = (ecc - 1.0) / (ecc + 1.0) * (D ** 2)
     assert abs(x) < 1
@@ -42,7 +42,7 @@ def _kepler_equation_prime_near_parabolic(D, M, ecc):
     return np.sqrt(2.0 / (1.0 + ecc)) + np.sqrt(2.0 / (1.0 + ecc) ** 3) * (D ** 2) * S
 
 
-@jit
+@cuda.jit(device=True)
 def S_x(ecc, x, atol=1e-12):
     assert abs(x) < 1
     S = 0
@@ -55,7 +55,7 @@ def S_x(ecc, x, atol=1e-12):
             return S
 
 
-@jit
+@cuda.jit(device=True)
 def dS_x_alt(ecc, x, atol=1e-12):
     # Notice that this is not exactly
     # the partial derivative of S with respect to D,
@@ -72,7 +72,7 @@ def dS_x_alt(ecc, x, atol=1e-12):
             return S
 
 
-@jit
+@cuda.jit(device=True)
 def M_to_D_near_parabolic(M, ecc, tol=1.48e-08, maxiter=50):
     """Parabolic eccentric anomaly from mean anomaly, near parabolic case.
     Parameters
@@ -101,7 +101,7 @@ def M_to_D_near_parabolic(M, ecc, tol=1.48e-08, maxiter=50):
 
     return np.nan
 
-@jit
+@cuda.jit(device=True)
 def nu_from_delta_t(delta_t, ecc, k=1.0, q=1.0, delta=1e-2):
     """True anomaly for given elapsed time since periapsis.
     Parameters
