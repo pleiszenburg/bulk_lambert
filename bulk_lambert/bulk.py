@@ -12,7 +12,12 @@ from numpy.linalg import norm
 
 from .iod import izzo as izzo_fast
 from ._jit import jit
-from .farnocchia import farnocchia as farnocchia_fast
+from .elements import coe2rv, rv2coe
+from .farnocchia import (
+    # farnocchia as farnocchia_fast,
+    delta_t_from_nu,
+    nu_from_delta_t,
+)
 from .util import time_range
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -49,11 +54,27 @@ def propagate(
     vv = np.zeros(shape, dtype = 'f8')
 
     # Compute
-    for idx, tof in enumerate(tofs):
-        rr[idx, :], vv[idx, :] = farnocchia_fast(k, r0, v0, tof)
+    _farnocchia_faster(k, r0, v0, tofs, rr, vv)
 
     # ADD UNITS
     return rr * u.km, vv * (u.km / u.s)
+
+@jit
+def _farnocchia_faster(k, r0, v0, tofs, rr, vv):
+
+    # get the initial true anomaly and orbit parameters that are constant over time
+    p, ecc, inc, raan, argp, nu0 = rv2coe(k, r0, v0)
+    q = p / (1 + ecc)
+
+    delta_t0 = delta_t_from_nu(nu0, ecc, k, q)
+
+    for idx, tof in enumerate(tofs):
+
+        delta_t = delta_t0 + tof
+
+        nu = nu_from_delta_t(delta_t, ecc, k, q)
+
+        rr[idx, :], vv[idx, :] = coe2rv(k, p, ecc, inc, raan, argp, nu)
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # LAMBERT
