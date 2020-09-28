@@ -70,7 +70,7 @@ def _farnocchia_wrapper(
 
     delta_t0 = delta_t_from_nu(nu0, ecc, k, q)
 
-    threadsperblock = 32
+    threadsperblock = 64
     blockspergrid = (tofs.shape[0] + (threadsperblock - 1)) // threadsperblock
 
     _rr = cuda.device_array(rr.shape, dtype = rr.dtype)
@@ -105,7 +105,7 @@ def _farnocchia_kernel(
     idx = tx + ty * bw
 
     # Early exit if we're out of bounds
-    if tofs.shape[0] >= idx:
+    if idx >= tofs.shape[0]:
         return
 
     _r = cuda.local.array((3, 3), dtype = nb.float64)
