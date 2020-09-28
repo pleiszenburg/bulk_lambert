@@ -59,7 +59,7 @@ def rv_pqw(k, p, ecc, nu):
     return pqw
 
 
-from .._jit import jit
+@cuda.jit(device=True)
 def coe_rotation_matrix(inc, raan, argp):
     """Create a rotation matrix for coe transformation"""
     r = rotation_matrix(raan, 2)
@@ -68,7 +68,7 @@ def coe_rotation_matrix(inc, raan, argp):
     return r
 
 
-from .._jit import jit
+@cuda.jit(device=True)
 def coe2rv(k, p, ecc, inc, raan, argp, nu):
     r"""Converts from classical orbital to state vectors.
     Classical orbital elements are converted into position and velocity
