@@ -117,4 +117,6 @@ def _farnocchia_kernel(
         _r, _r_buffer1, _r_buffer2, # 3x3
         _pqw, _ijk, # 2x3
         )
-    rr[idx, :], vv[idx, :] = _ijk[0, :], _ijk[1, :]
+    for dim in range(3):
+        rr[idx, dim] = _ijk[0, dim]
+        vv[idx, dim] = _ijk[1, dim]
