@@ -53,9 +53,13 @@ def rv_pqw(k, p, ecc, nu):
     r = [-5312706.25105345  9201877.15251336    0] [m]
     v = [-5753.30180931 -1328.66813933  0] [m]/[s]
     """
-    pqw = np.array([[cos(nu), sin(nu), 0], [-sin(nu), ecc + cos(nu), 0]]) * np.array(
-        [[p / (1 + ecc * cos(nu))], [sqrt(k / p)]]
-    )
+    pqw = np.array([
+        [cos(nu), sin(nu), 0],
+        [-sin(nu), ecc + cos(nu), 0],
+    ]) * np.array([
+        [p / (1 + ecc * cos(nu))],
+        [sqrt(k / p)],
+    ])
     return pqw
 
 
