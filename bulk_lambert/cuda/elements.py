@@ -65,7 +65,7 @@ def rv_pqw(
     _pqw[0, 2] = 0.0
 
     _pqw[1, 0] = -sin(nu) * b
-    _pqw[1, 1] = ecc + cos(nu) * b
+    _pqw[1, 1] = (ecc + cos(nu)) * b
     _pqw[1, 2] = 0.0
 
 
