@@ -98,6 +98,12 @@ def _farnocchia_kernel(
     if tofs.shape[0] >= idx:
         return
 
+    _r = cuda.local.array((3, 3), dtype = 'f8')
+    _r_buffer1 = cuda.local.array((3, 3), dtype = 'f8')
+    _r_buffer2 = cuda.local.array((3, 3), dtype = 'f8')
+    _pqw = cuda.local.array((2, 3), dtype = 'f8')
+    _ijk = cuda.local.array((2, 3), dtype = 'f8')
+
     delta_t = delta_t0 + tofs[idx]
 
     nu = nu_from_delta_t(delta_t, ecc, k, q)
