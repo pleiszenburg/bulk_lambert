@@ -95,8 +95,8 @@ def lambert(
     tof_steps_start : int
     tof_steps_stop : int
 
-    M : int, optional
-        Number of full revolutions, default to 0.
+    M_max : int, optional
+        Upper limit of number of full revolutions to test.
     numiter : int, optional
         Maximum number of iterations, default to 35.
     rtol : float, optional
@@ -139,7 +139,7 @@ def lambert(
     dv1 = np.zeros(shape, dtype = 'f8')
     dv2 = np.zeros(shape, dtype = 'f8')
     dv = np.zeros(shape[:-1], dtype = 'f8')
-    MM = np.zeros(shape[:-1], dtype = 'u8')
+    MM = -1 * np.ones(shape[:-1], dtype = 'i1')
 
     # Compute
     _lambert_fast(
@@ -160,6 +160,8 @@ def lambert(
         dv1,
         dv2,
     )
+
+    dv[MM == -1] = np.Inf
 
     # ADD UNITS
     return epochs_select, tofs, dv * (u.km / u.s), MM, dv1 * (u.km / u.s), dv2 * (u.km / u.s)
@@ -210,6 +212,9 @@ def _lambert_fast(
                         ))
                 except:
                     continue
+
+            if len(solutions) == 0:
+                continue
 
             # best = min(solutions, key = lambda solution: solutions[3])
             best = solutions[0]
