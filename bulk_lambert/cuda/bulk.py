@@ -5,6 +5,7 @@
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 from numba import cuda
+import numba as nb
 
 import astropy.units as u
 
@@ -69,7 +70,10 @@ def _farnocchia_wrapper(
 
     delta_t0 = delta_t_from_nu(nu0, ecc, k, q)
 
-    _farnocchia_kernel(
+    threadsperblock = 32
+    blockspergrid = (tofs.shape[0] + (threadsperblock - 1)) // threadsperblock
+
+    _farnocchia_kernel[blockspergrid, threadsperblock](
         tofs, # vector
         delta_t0, # scalar
         k, p, ecc, inc, raan, argp, q, # scalars
@@ -98,15 +102,15 @@ def _farnocchia_kernel(
     if tofs.shape[0] >= idx:
         return
 
-    _r = cuda.local.array((3, 3), dtype = 'f8')
-    _r_buffer1 = cuda.local.array((3, 3), dtype = 'f8')
-    _r_buffer2 = cuda.local.array((3, 3), dtype = 'f8')
-    _pqw = cuda.local.array((2, 3), dtype = 'f8')
-    _ijk = cuda.local.array((2, 3), dtype = 'f8')
+    _r = cuda.local.array((3, 3), dtype = nb.float64)
+    _r_buffer1 = cuda.local.array((3, 3), dtype = nb.float64)
+    _r_buffer2 = cuda.local.array((3, 3), dtype = nb.float64)
+    _pqw = cuda.local.array((2, 3), dtype = nb.float64)
+    _ijk = cuda.local.array((2, 3), dtype = nb.float64)
 
     delta_t = delta_t0 + tofs[idx]
 
-    nu = nu_from_delta_t(delta_t, ecc, k, q)
+    nu = nu_from_delta_t(delta_t, ecc, k, q, 1e-2)
 
     coe2rv(
         k, p, ecc, inc, raan, argp, nu,
