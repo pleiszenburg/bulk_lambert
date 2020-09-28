@@ -20,6 +20,22 @@ def matmul_3x3(A, B, _out):
 
 
 @cuda.jit(device=True)
+def matmul_1x3T(A, B, _out):
+    """
+    very naive vector array to matrix multiplication
+    A, _out: Nx3
+    B: 3x3, transposed
+    """
+
+    _out[:, :] = 0.0
+
+    for dim in range(A.shape[0]):
+        for j in range(3):
+            for k in range(3):
+                _out[dim, j] += A[dim, k] * B[j, k]
+
+
+@cuda.jit(device=True)
 def rotation_matrix(angle, axis, _matrix): # matrix must be allocated elsewhere
 
     c = cos(angle)
