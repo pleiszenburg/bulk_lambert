@@ -4,7 +4,7 @@ from numba import cuda
 import numpy as np
 from numpy import sin, cos, sqrt
 
-from .util import rotation_matrix
+from .util import rotation_matrix, matmul_3x3
 
 @cuda.jit(device=True)
 def rv_pqw(k, p, ecc, nu):
@@ -64,12 +64,19 @@ def rv_pqw(k, p, ecc, nu):
 
 
 @cuda.jit(device=True)
-def coe_rotation_matrix(inc, raan, argp):
+def coe_rotation_matrix(inc, raan, argp, _r1, _r2, _r3):
     """Create a rotation matrix for coe transformation"""
-    r = rotation_matrix(raan, 2)
-    r = r @ rotation_matrix(inc, 0)
-    r = r @ rotation_matrix(argp, 2)
-    return r
+
+    # r = rotation_matrix(raan, 2)
+    rotation_matrix(raan, 2, _r1) # set _r1
+
+    # r = r @ rotation_matrix(inc, 0)
+    rotation_matrix(inc, 0, _r2) # set _r2
+    matmul_3x3(_r1, _r2, _r3) # set _r3 -> _r1 & _r2 are free
+
+    # r = r @ rotation_matrix(argp, 2)
+    rotation_matrix(argp, 2, _r2) # set _r2
+    matmul_3x3(_r3, _r2, _r1) # set _r1 -> _r2 & _r3 are free
 
 
 @cuda.jit(device=True)
