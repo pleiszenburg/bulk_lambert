@@ -73,12 +73,18 @@ def _farnocchia_wrapper(
     threadsperblock = 32
     blockspergrid = (tofs.shape[0] + (threadsperblock - 1)) // threadsperblock
 
+    _rr = cuda.device_array(rr.shape, dtype = rr.dtype)
+    _vv = cuda.device_array(vv.shape, dtype = vv.dtype)
+
     _farnocchia_kernel[blockspergrid, threadsperblock](
         tofs, # vector
         delta_t0, # scalar
         k, p, ecc, inc, raan, argp, q, # scalars
-        rr, vv, # arrays of vectors
+        _rr, _vv, # arrays of vectors
     )
+
+    _rr.copy_to_host(rr)
+    _vv.copy_to_host(vv)
 
 
 @cuda.jit(device=False)

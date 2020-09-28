@@ -11,7 +11,10 @@ def matmul_3x3(A, B, _out):
     A, B, _out: 3x3
     """
 
-    _out[:, :] = 0.0
+    # _out[:, :] = 0.0
+    for i in range(3):
+        for j in range(3):
+            _out[i, j] = 0.0
 
     for i in range(3):
         for j in range(3):
@@ -27,12 +30,15 @@ def matmul_1x3T(A, B, _out):
     B: 3x3, transposed
     """
 
-    _out[:, :] = 0.0
+    # _out[:, :] = 0.0
+    for element in range(_out.shape[0]):
+        for j in range(3):
+            _out[element, j] = 0.0
 
-    for dim in range(A.shape[0]):
+    for element in range(A.shape[0]):
         for j in range(3):
             for k in range(3):
-                _out[dim, j] += A[dim, k] * B[j, k]
+                _out[element, j] += A[element, k] * B[j, k]
 
 
 @cuda.jit(device=True)
@@ -84,5 +90,5 @@ def rotation_matrix(angle, axis, _matrix): # matrix must be allocated elsewhere
         _matrix[2, 2] = 1.0
 
     else:
-        
+
         raise ValueError("Invalid axis: must be one of 'x', 'y' or 'z'")
