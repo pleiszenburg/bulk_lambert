@@ -1,13 +1,16 @@
 
 from numba import cuda
 
-import numpy as np
 from numpy import sin, cos, sqrt
 
-from .util import rotation_matrix, matmul_3x3
+from .util import rotation_matrix, matmul_3x3, matmul_1x3T
+
 
 @cuda.jit(device=True)
-def rv_pqw(k, p, ecc, nu):
+def rv_pqw(
+    k, p, ecc, nu,
+    _pqw, # 2x3
+):
     r"""Returns r and v vectors in perifocal frame.
     Parameters
     ----------
@@ -53,34 +56,39 @@ def rv_pqw(k, p, ecc, nu):
     r = [-5312706.25105345  9201877.15251336    0] [m]
     v = [-5753.30180931 -1328.66813933  0] [m]/[s]
     """
-    pqw = np.array([
-        [cos(nu), sin(nu), 0],
-        [-sin(nu), ecc + cos(nu), 0],
-    ]) * np.array([
-        [p / (1 + ecc * cos(nu))],
-        [sqrt(k / p)],
-    ])
-    return pqw
+
+    a = p / (1 + ecc * cos(nu))
+    b = sqrt(k / p)
+
+    _pqw[0, :] = cos(nu) * a, sin(nu) * a, 0
+    _pqw[1, :] = -sin(nu) * b, ecc + cos(nu) * b, 0
 
 
 @cuda.jit(device=True)
-def coe_rotation_matrix(inc, raan, argp, _r1, _r2, _r3):
+def coe_rotation_matrix(
+    inc, raan, argp,
+    _r, _r_buffer1, _r_buffer2, # 3x3
+):
     """Create a rotation matrix for coe transformation"""
 
     # r = rotation_matrix(raan, 2)
-    rotation_matrix(raan, 2, _r1) # set _r1
+    rotation_matrix(raan, 2, _r) # set _r
 
     # r = r @ rotation_matrix(inc, 0)
-    rotation_matrix(inc, 0, _r2) # set _r2
-    matmul_3x3(_r1, _r2, _r3) # set _r3 -> _r1 & _r2 are free
+    rotation_matrix(inc, 0, _r_buffer1) # set _r_buffer1
+    matmul_3x3(_r, _r_buffer1, _r_buffer2) # set _r_buffer2 -> _r & _r_buffer1 are free
 
     # r = r @ rotation_matrix(argp, 2)
-    rotation_matrix(argp, 2, _r2) # set _r2
-    matmul_3x3(_r3, _r2, _r1) # set _r1 -> _r2 & _r3 are free
+    rotation_matrix(argp, 2, _r_buffer1) # set _r_buffer1
+    matmul_3x3(_r_buffer2, _r_buffer1, _r) # set _r -> _r_buffer1 & _r_buffer2 are free
 
 
 @cuda.jit(device=True)
-def coe2rv(k, p, ecc, inc, raan, argp, nu):
+def coe2rv(
+    k, p, ecc, inc, raan, argp, nu,
+    _r, _r_buffer1, _r_buffer2, # 3x3
+    _pqw, _ijk, # 2x3
+    ):
     r"""Converts from classical orbital to state vectors.
     Classical orbital elements are converted into position and velocity
     vectors by `rv_pqw` algorithm. A rotation matrix is applied to position
@@ -126,9 +134,12 @@ def coe2rv(k, p, ecc, inc, raan, argp, nu):
         \sin(\omega)\sin(i) & \cos(\omega)\sin(i) & \cos(i)
         \end{bmatrix}
     """
-    pqw = rv_pqw(k, p, ecc, nu)
-    rm = coe_rotation_matrix(inc, raan, argp)
-
-    ijk = pqw @ rm.T
-
-    return ijk
+    rv_pqw(
+        k, p, ecc, nu,
+        _pqw, # 2x3
+    )
+    coe_rotation_matrix(
+        inc, raan, argp,
+        _r, _r_buffer1, _r_buffer2, # 3x3
+    )
+    matmul_1x3T(_pqw, _r, _ijk)
