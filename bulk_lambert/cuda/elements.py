@@ -1,7 +1,7 @@
 
 from numba import cuda
 
-from numpy import sin, cos, sqrt
+from math import sin, cos, sqrt
 
 from .util import rotation_matrix, matmul_3x3, matmul_1x3T
 
@@ -60,8 +60,13 @@ def rv_pqw(
     a = p / (1 + ecc * cos(nu))
     b = sqrt(k / p)
 
-    _pqw[0, :] = cos(nu) * a, sin(nu) * a, 0
-    _pqw[1, :] = -sin(nu) * b, ecc + cos(nu) * b, 0
+    _pqw[0, 0] = cos(nu) * a
+    _pqw[0, 1] = sin(nu) * a
+    _pqw[0, 2] = 0.0
+
+    _pqw[1, 0] = -sin(nu) * b
+    _pqw[1, 1] = ecc + cos(nu) * b
+    _pqw[1, 2] = 0.0
 
 
 @cuda.jit(device=True)

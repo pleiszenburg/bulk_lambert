@@ -1,7 +1,7 @@
 
 from numba import cuda
 
-from numpy import sin, cos
+from math import sin, cos
 
 
 @cuda.jit(device=True)
@@ -42,16 +42,47 @@ def rotation_matrix(angle, axis, _matrix): # matrix must be allocated elsewhere
     s = sin(angle)
 
     if axis == 0:
-        _matrix[0, :] = 1.0, 0.0, 0.0
-        _matrix[1, :] = 0.0, c, -s
-        _matrix[2, :] = 0.0, s, c
+
+        _matrix[0, 0] = 1.0
+        _matrix[0, 1] = 0.0
+        _matrix[0, 2] = 0.0
+
+        _matrix[1, 0] = 0.0
+        _matrix[1, 1] = c
+        _matrix[1, 2] = -s
+
+        _matrix[2, 0] = 0.0
+        _matrix[2, 1] = s
+        _matrix[2, 2] = c
+
     elif axis == 1:
-        _matrix[0, :] = c, 0.0, s
-        _matrix[1, :] = 0.0, 1.0, 0.0
-        _matrix[2, :] = s, 0.0, c
+
+        _matrix[0, 0] = c
+        _matrix[0, 1] = 0.0
+        _matrix[0, 2] = s
+
+        _matrix[1, 0] = 0.0
+        _matrix[1, 1] = 1.0
+        _matrix[1, 2] = 0.0
+
+        _matrix[2, 0] = s
+        _matrix[2, 1] = 0.0
+        _matrix[2, 2] = c
+
     elif axis == 2:
-        _matrix[0, :] = c, -s, 0.0
-        _matrix[1, :] = s, c, 0.0
-        _matrix[2, :] = 0.0, 0.0, 1.0
+
+        _matrix[0, 0] = c
+        _matrix[0, 1] = -s
+        _matrix[0, 2] = 0.0
+
+        _matrix[1, 0] = s
+        _matrix[1, 1] = c
+        _matrix[1, 2] = 0.0
+
+        _matrix[2, 0] = 0.0
+        _matrix[2, 1] = 0.0
+        _matrix[2, 2] = 1.0
+
     else:
+        
         raise ValueError("Invalid axis: must be one of 'x', 'y' or 'z'")
