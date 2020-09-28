@@ -24,7 +24,7 @@ from .angles import (
 def D_to_M_near_parabolic(D, ecc):
     x = (ecc - 1.0) / (ecc + 1.0) * (D ** 2)
     assert abs(x) < 1
-    S = S_x(ecc, x)
+    S = S_x(ecc, x, 1e-12)
     return (
         np.sqrt(2.0 / (1.0 + ecc)) * D + np.sqrt(2.0 / (1.0 + ecc) ** 3) * (D ** 3) * S
     )
@@ -39,7 +39,7 @@ def _kepler_equation_near_parabolic(D, M, ecc):
 def _kepler_equation_prime_near_parabolic(D, M, ecc):
     x = (ecc - 1.0) / (ecc + 1.0) * (D ** 2)
     assert abs(x) < 1
-    S = dS_x_alt(ecc, x)
+    S = dS_x_alt(ecc, x, 1e-12)
     return np.sqrt(2.0 / (1.0 + ecc)) + np.sqrt(2.0 / (1.0 + ecc) ** 3) * (D ** 2) * S
 
 
@@ -147,7 +147,7 @@ def nu_from_delta_t(delta_t, ecc, k=1.0, q=1.0, delta=1e-2):
             # Near parabolic, recompute M
             n = sqrt(k / (2 * q ** 3))
             M = n * delta_t
-            D = M_to_D_near_parabolic(M, ecc)
+            D = M_to_D_near_parabolic(M, ecc, 1.48e-08, 50)
             nu = D_to_nu(D)
     elif ecc == 1:
         # Parabolic
@@ -170,7 +170,7 @@ def nu_from_delta_t(delta_t, ecc, k=1.0, q=1.0, delta=1e-2):
             # Near parabolic, recompute M
             n = sqrt(k / (2 * q ** 3))
             M = n * delta_t
-            D = M_to_D_near_parabolic(M, ecc)
+            D = M_to_D_near_parabolic(M, ecc, 1.48e-08, 50)
             nu = D_to_nu(D)
     # elif 1 + delta < ecc:
     else:
