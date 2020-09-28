@@ -1,30 +1,30 @@
 
 import numpy as np
 
-from .._jit import jit
+from numba import cuda
 
 
-@jit
+@cuda.jit(device=True)
 def _kepler_equation(E, M, ecc):
     return E_to_M(E, ecc) - M
 
 
-@jit
+@cuda.jit(device=True)
 def _kepler_equation_prime(E, M, ecc):
     return 1 - ecc * np.cos(E)
 
 
-@jit
+@cuda.jit(device=True)
 def _kepler_equation_hyper(F, M, ecc):
     return F_to_M(F, ecc) - M
 
 
-@jit
+@cuda.jit(device=True)
 def _kepler_equation_prime_hyper(F, M, ecc):
     return ecc * np.cosh(F) - 1
 
 
-@jit
+@cuda.jit(device=True)
 def newton(regime, x0, args=(), tol=1.48e-08, maxiter=50):
     p0 = 1.0 * x0
     for iter in range(maxiter):
@@ -44,7 +44,7 @@ def newton(regime, x0, args=(), tol=1.48e-08, maxiter=50):
     return np.nan
 
 
-@jit
+@cuda.jit(device=True)
 def D_to_nu(D):
     r"""True anomaly from parabolic anomaly.
     Parameters
@@ -65,7 +65,7 @@ def D_to_nu(D):
     return 2.0 * np.arctan(D)
 
 
-@jit
+@cuda.jit(device=True)
 def nu_to_D(nu):
     r"""Parabolic anomaly from true anomaly.
     Parameters
@@ -108,7 +108,7 @@ def nu_to_D(nu):
     return np.tan(nu / 2.0)
 
 
-@jit
+@cuda.jit(device=True)
 def nu_to_E(nu, ecc):
     r"""Eccentric anomaly from true anomaly.
     .. versionadded:: 0.4.0
@@ -137,7 +137,7 @@ def nu_to_E(nu, ecc):
     return E
 
 
-@jit
+@cuda.jit(device=True)
 def nu_to_F(nu, ecc):
     r"""Hyperbolic anomaly from true anomaly.
     Parameters
@@ -167,7 +167,7 @@ def nu_to_F(nu, ecc):
     return F
 
 
-@jit
+@cuda.jit(device=True)
 def E_to_nu(E, ecc):
     r"""True anomaly from eccentric anomaly.
     .. versionadded:: 0.4.0
@@ -196,7 +196,7 @@ def E_to_nu(E, ecc):
     return nu
 
 
-@jit
+@cuda.jit(device=True)
 def F_to_nu(F, ecc):
     r"""True anomaly from hyperbolic anomaly.
     Parameters
@@ -220,7 +220,7 @@ def F_to_nu(F, ecc):
     return nu
 
 
-@jit
+@cuda.jit(device=True)
 def M_to_E(M, ecc):
     """Eccentric anomaly from mean anomaly.
     .. versionadded:: 0.4.0
@@ -247,7 +247,7 @@ def M_to_E(M, ecc):
     return E
 
 
-@jit
+@cuda.jit(device=True)
 def M_to_F(M, ecc):
     """Hyperbolic anomaly from mean anomaly.
     Parameters
@@ -269,7 +269,7 @@ def M_to_F(M, ecc):
     return F
 
 
-@jit
+@cuda.jit(device=True)
 def M_to_D(M):
     """Parabolic anomaly from mean anomaly.
     Parameters
@@ -290,7 +290,7 @@ def M_to_D(M):
     return D
 
 
-@jit
+@cuda.jit(device=True)
 def E_to_M(E, ecc):
     r"""Mean anomaly from eccentric anomaly.
     .. versionadded:: 0.4.0
@@ -319,7 +319,7 @@ def E_to_M(E, ecc):
     return M
 
 
-@jit
+@cuda.jit(device=True)
 def F_to_M(F, ecc):
     r"""Mean anomaly from eccentric anomaly.
     Parameters
@@ -345,7 +345,7 @@ def F_to_M(F, ecc):
     return M
 
 
-@jit
+@cuda.jit(device=True)
 def D_to_M(D):
     r"""Mean anomaly from parabolic anomaly.
     Parameters
@@ -371,7 +371,7 @@ def D_to_M(D):
     return M
 
 
-@jit
+@cuda.jit(device=True)
 def fp_angle(nu, ecc):
     r"""Returns the flight path angle.
     Parameters
