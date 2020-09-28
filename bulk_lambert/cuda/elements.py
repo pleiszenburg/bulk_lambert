@@ -1,12 +1,12 @@
 
+from numba import cuda
+
 import numpy as np
 from numpy import sin, cos, sqrt
 
-from .._jit import jit
-
 from .util import rotation_matrix
 
-@jit
+@cuda.jit(device=True)
 def rv_pqw(k, p, ecc, nu):
     r"""Returns r and v vectors in perifocal frame.
     Parameters
@@ -59,7 +59,7 @@ def rv_pqw(k, p, ecc, nu):
     return pqw
 
 
-@jit
+from .._jit import jit
 def coe_rotation_matrix(inc, raan, argp):
     """Create a rotation matrix for coe transformation"""
     r = rotation_matrix(raan, 2)
@@ -68,7 +68,7 @@ def coe_rotation_matrix(inc, raan, argp):
     return r
 
 
-@jit
+from .._jit import jit
 def coe2rv(k, p, ecc, inc, raan, argp, nu):
     r"""Converts from classical orbital to state vectors.
     Classical orbital elements are converted into position and velocity
