@@ -1,5 +1,7 @@
 
-import numpy as np
+# import numpy as np
+
+from math import cos, cosh, nan, atan, tan, sqrt, atanh, tanh, pi, asinh, sin, sinh, atan2
 
 from numba import cuda
 
@@ -11,7 +13,7 @@ def _kepler_equation(E, M, ecc):
 
 @cuda.jit(device=True)
 def _kepler_equation_prime(E, M, ecc):
-    return 1 - ecc * np.cos(E)
+    return 1 - ecc * cos(E)
 
 
 @cuda.jit(device=True)
@@ -21,7 +23,7 @@ def _kepler_equation_hyper(F, M, ecc):
 
 @cuda.jit(device=True)
 def _kepler_equation_prime_hyper(F, M, ecc):
-    return ecc * np.cosh(F) - 1
+    return ecc * cosh(F) - 1
 
 
 @cuda.jit(device=True)
@@ -38,7 +40,7 @@ def newton_hyperbolic(x0, M, ecc, tol=1.48e-08, maxiter=50):
             return p
         p0 = p
 
-    return np.nan
+    return nan
 
 
 @cuda.jit(device=True)
@@ -55,7 +57,7 @@ def newton_elliptic(x0, M, ecc, tol=1.48e-08, maxiter=50):
             return p
         p0 = p
 
-    return np.nan
+    return nan
 
 
 @cuda.jit(device=True)
@@ -76,7 +78,7 @@ def D_to_nu(D):
         \nu = 2 \arctan{D}
     """
 
-    return 2.0 * np.arctan(D)
+    return 2.0 * atan(D) # np.arctan
 
 
 @cuda.jit(device=True)
@@ -119,7 +121,7 @@ def nu_to_D(nu):
        of Astrodynamics, Revised Edition", 1999.
     """
     # TODO: Rename to B
-    return np.tan(nu / 2.0)
+    return tan(nu / 2.0)
 
 
 @cuda.jit(device=True)
@@ -147,7 +149,7 @@ def nu_to_E(nu, ecc):
         E = 2 \atan \left( \sqrt{\frac{1 - e}{1 + e}} \tan{\frac{\nu}{2}}
         \in (-\pi, \pi]
     """
-    E = 2 * np.arctan(np.sqrt((1 - ecc) / (1 + ecc)) * np.tan(nu / 2))
+    E = 2 * atan(sqrt((1 - ecc) / (1 + ecc)) * tan(nu / 2))
     return E
 
 
@@ -177,7 +179,7 @@ def nu_to_F(nu, ecc):
     .. math::
         F = 2 \operatorname{arctanh} \sqrt{\frac{e-1}{e+1}} \tan{\frac{\nu}{2}}
     """
-    F = 2 * np.arctanh(np.sqrt((ecc - 1) / (ecc + 1)) * np.tan(nu / 2))
+    F = 2 * atanh(sqrt((ecc - 1) / (ecc + 1)) * tan(nu / 2)) # np.arctanh
     return F
 
 
@@ -206,7 +208,7 @@ def E_to_nu(E, ecc):
         \nu = 2 \atan \left( \sqrt{\frac{1 + e}{1 - e}} \tan{\frac{E}{2}} \right)
         \in (-\pi, \pi]
     """
-    nu = 2 * np.arctan(np.sqrt((1 + ecc) / (1 - ecc)) * np.tan(E / 2))
+    nu = 2 * atan(sqrt((1 + ecc) / (1 - ecc)) * tan(E / 2))
     return nu
 
 
@@ -230,7 +232,7 @@ def F_to_nu(F, ecc):
         \nu = 2 \atan \left( \sqrt{\frac{e + 1}{e - 1}} \tanh{\frac{F}{2}}
         \in (-\pi, \pi]
     """
-    nu = 2 * np.arctan(np.sqrt((ecc + 1) / (ecc - 1)) * np.tanh(F / 2))
+    nu = 2 * atan(sqrt((ecc + 1) / (ecc - 1)) * tanh(F / 2))
     return nu
 
 
@@ -252,12 +254,12 @@ def M_to_E(M, ecc):
     -----
     This uses a Newton iteration on the Kepler equation.
     """
-    assert -np.pi <= M <= np.pi
+    assert -pi <= M <= pi
     if ecc < 0.8:
         E0 = M
     else:
         sign = -1.0 if M < 0.0 else (0.0 if M == 0.0 else 1.0)
-        E0 = np.pi * sign
+        E0 = pi * sign
     E = newton_elliptic(E0, M, ecc, 1.48e-08, 50)
     return E
 
@@ -279,7 +281,7 @@ def M_to_F(M, ecc):
     -----
     This uses a Newton iteration on the hyperbolic Kepler equation.
     """
-    F0 = np.arcsinh(M / ecc)
+    F0 = asinh(M / ecc)
     F = newton_hyperbolic(F0, M, ecc, 1.48e-08, 50)
     return F
 
@@ -330,7 +332,7 @@ def E_to_M(E, ecc):
     .. math::
         M = E - e \sin{E}
     """
-    M = E - ecc * np.sin(E)
+    M = E - ecc * sin(E)
     return M
 
 
@@ -356,7 +358,7 @@ def F_to_M(F, ecc):
     .. math::
         M = e \sinh{F} - F
     """
-    M = ecc * np.sinh(F) - F
+    M = ecc * sinh(F) - F
     return M
 
 
@@ -405,4 +407,4 @@ def fp_angle(nu, ecc):
     .. math::
         \phi = \operatorname{atan2}(e \sin{\nu}, 1 + e \cos{\nu})
     """
-    return np.arctan2(ecc * np.sin(nu), 1 + ecc * np.cos(nu))
+    return atan2(ecc * sin(nu), 1 + ecc * cos(nu))
