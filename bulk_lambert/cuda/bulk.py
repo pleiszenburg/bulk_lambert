@@ -62,6 +62,7 @@ def _farnocchia_wrapper(
     r0, v0, # vectors
     tofs, # vector
     rr, vv, # arrays of vectors
+    blocksize = 128,
 ):
 
     # get the initial true anomaly and orbit parameters that are constant over time
@@ -70,7 +71,7 @@ def _farnocchia_wrapper(
 
     delta_t0 = delta_t_from_nu(nu0, ecc, k, q)
 
-    threadsperblock = 128
+    threadsperblock = blocksize
     blockspergrid = (tofs.shape[0] + (threadsperblock - 1)) // threadsperblock
 
     _rr = cuda.device_array(rr.shape, dtype = rr.dtype)
