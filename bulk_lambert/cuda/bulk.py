@@ -70,7 +70,7 @@ def _farnocchia_wrapper(
 
     delta_t0 = delta_t_from_nu(nu0, ecc, k, q)
 
-    threadsperblock = 64
+    threadsperblock = 128
     blockspergrid = (tofs.shape[0] + (threadsperblock - 1)) // threadsperblock
 
     _rr = cuda.device_array(rr.shape, dtype = rr.dtype)
