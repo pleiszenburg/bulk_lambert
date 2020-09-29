@@ -24,6 +24,7 @@ from .farnocchia import nu_from_delta_t # CUDA device function
 def propagate(
     orbit,
     epochs,
+    blocksize = 128,
 ):
     """Propagate an orbit some epochs and return the results.
     Parameters
@@ -51,7 +52,7 @@ def propagate(
     vv = np.zeros(shape, dtype = 'f8')
 
     # Compute
-    _farnocchia_wrapper(k, r0, v0, tofs, rr, vv)
+    _farnocchia_wrapper(k, r0, v0, tofs, rr, vv, blocksize)
 
     # ADD UNITS
     return rr * u.km, vv * (u.km / u.s)
@@ -62,7 +63,7 @@ def _farnocchia_wrapper(
     r0, v0, # vectors
     tofs, # vector
     rr, vv, # arrays of vectors
-    blocksize = 128,
+    blocksize, # scalar
 ):
 
     # get the initial true anomaly and orbit parameters that are constant over time
