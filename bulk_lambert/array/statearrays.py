@@ -1,6 +1,6 @@
 from astropy import units as u
 
-from .elements import coe2mee, coe2rv, mee2coe, rv2coe
+from ..elements import coe2mee, coe2rv, mee2coe, rv2coe
 
 
 # from .elements import mean_motion, period
@@ -14,7 +14,7 @@ def period(k, a):
     return 2 * np.pi * u.rad / n
 
 
-class BaseState:
+class BaseStateArray:
     """Base State class, meant to be subclassed."""
 
     def __init__(self, attractor, plane):
@@ -74,7 +74,7 @@ class BaseState:
         raise NotImplementedError
 
 
-class ClassicalState(BaseState):
+class ClassicalStateArray(BaseStateArray):
     """State defined by its classical orbital elements."""
 
     def __init__(self, attractor, p, ecc, inc, raan, argp, nu, plane):
@@ -162,7 +162,7 @@ class ClassicalState(BaseState):
         )
 
 
-class RVState(BaseState):
+class RVStateArray(BaseStateArray):
     """State defined by its position and velocity vectors."""
 
     def __init__(self, attractor, r, v, plane):
@@ -204,7 +204,7 @@ class RVState(BaseState):
         )
 
 
-class ModifiedEquinoctialState(BaseState):
+class ModifiedEquinoctialStateArray(BaseStateArray):
     def __init__(self, attractor, p, f, g, h, k, L, plane):
         super().__init__(attractor, plane)
         self._p = p
