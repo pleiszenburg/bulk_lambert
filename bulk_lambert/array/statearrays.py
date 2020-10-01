@@ -1,5 +1,8 @@
 from astropy import units as u
 
+import numpy as np
+
+from .._jit import jit
 from ..elements import coe2mee, coe2rv, mee2coe, rv2coe
 
 
@@ -79,6 +82,9 @@ class ClassicalStateArray(BaseStateArray):
 
     def __init__(self, attractor, p, ecc, inc, raan, argp, nu, plane):
         super().__init__(attractor, plane)
+
+        assert p.shape == ecc.shape == inc.shape == raan.shape == argp.shape == nu.shape
+
         self._p = p
         self._ecc = ecc
         self._inc = inc
@@ -123,7 +129,10 @@ class ClassicalStateArray(BaseStateArray):
 
     def to_vectors(self):
         """Converts to position and velocity vector representation."""
-        r, v = coe2rv(
+
+        r, v = np.zeros((self.p.shape[0], 3)), np.zeros((self.p.shape[0], 3))
+
+        self._to_vectors(
             self.attractor.k.to(u.km ** 3 / u.s ** 2).value,
             self.p.to(u.km).value,
             self.ecc.value,
@@ -131,9 +140,42 @@ class ClassicalStateArray(BaseStateArray):
             self.raan.to(u.rad).value,
             self.argp.to(u.rad).value,
             self.nu.to(u.rad).value,
+            r,
+            v,
         )
 
-        return RVStateArray(self.attractor, r * u.km, v * u.km / u.s, self.plane)
+        return RVStateArray(
+            self.attractor,
+            r * u.km,
+            v * u.km / u.s,
+            self.plane,
+        )
+
+    @staticmethod
+    @jit
+    def _to_vectors(
+        k,
+        p,
+        ecc,
+        inc,
+        raan,
+        argp,
+        nu,
+        r,
+        v,
+    ):
+
+        for idx in range(p.shape[0]):
+
+            r[idx, :], v[idx, :] = coe2rv(
+                k,
+                p[idx],
+                ecc[idx],
+                inc[idx],
+                raan[idx],
+                argp[idx],
+                nu[idx],
+            )
 
     def to_classical(self):
         """Converts to classical orbital elements representation."""
