@@ -209,6 +209,9 @@ class RVStateArray(BaseStateArray):
 
     def __init__(self, attractor, r, v, plane):
         super().__init__(attractor, plane)
+
+        assert r.shape == v.shape
+
         self._r = r
         self._v = v
 
@@ -228,10 +231,21 @@ class RVStateArray(BaseStateArray):
 
     def to_classical(self):
         """Converts to classical orbital elements representation."""
-        (p, ecc, inc, raan, argp, nu) = rv2coe(
+
+        p, ecc, inc, raan, argp, nu = (
+            np.zeros((self._r.shape[0],)),
+            np.zeros((self._r.shape[0],)),
+            np.zeros((self._r.shape[0],)),
+            np.zeros((self._r.shape[0],)),
+            np.zeros((self._r.shape[0],)),
+            np.zeros((self._r.shape[0],)),
+        )
+
+        self._to_classical(
             self.attractor.k.to(u.km ** 3 / u.s ** 2).value,
             self.r.to(u.km).value,
             self.v.to(u.km / u.s).value,
+            p, ecc, inc, raan, argp, nu,
         )
 
         return ClassicalStateArray(
@@ -244,6 +258,23 @@ class RVStateArray(BaseStateArray):
             nu * u.rad,
             self.plane,
         )
+
+    @staticmethod
+    @jit
+    def _to_classical(
+        k,
+        r,
+        v,
+        p, ecc, inc, raan, argp, nu,
+    ):
+
+        for idx in range(r.shape[0]):
+            p[idx], ecc[idx], inc[idx], raan[idx], argp[idx], nu[idx] = rv2coe(
+                k,
+                r[idx, :],
+                v[idx, :],
+            )
+
 
 
 class ModifiedEquinoctialStateArray(BaseStateArray):
