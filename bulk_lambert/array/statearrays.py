@@ -280,6 +280,9 @@ class RVStateArray(BaseStateArray):
 class ModifiedEquinoctialStateArray(BaseStateArray):
     def __init__(self, attractor, p, f, g, h, k, L, plane):
         super().__init__(attractor, plane)
+
+        assert p.shape == f.shape == g.shape == h.shape == k.shape == L.shape
+
         self._p = p
         self._f = f
         self._g = g
@@ -312,13 +315,24 @@ class ModifiedEquinoctialStateArray(BaseStateArray):
         return self._L
 
     def to_classical(self):
-        p, ecc, inc, raan, argp, nu = mee2coe(
+
+        p, ecc, inc, raan, argp, nu = (
+            np.zeros((self.p.shape[0],)),
+            np.zeros((self.p.shape[0],)),
+            np.zeros((self.p.shape[0],)),
+            np.zeros((self.p.shape[0],)),
+            np.zeros((self.p.shape[0],)),
+            np.zeros((self.p.shape[0],)),
+        )
+
+        self._to_classical(
             self.p.to(u.km).value,
             self.f.to(u.rad).value,
             self.g.to(u.rad).value,
             self.h.to(u.rad).value,
             self.k.to(u.rad).value,
             self.L.to(u.rad).value,
+            p, ecc, inc, raan, argp, nu,
         )
 
         return ClassicalStateArray(
@@ -331,3 +345,25 @@ class ModifiedEquinoctialStateArray(BaseStateArray):
             nu * u.rad,
             self.plane,
         )
+
+    @staticmethod
+    @jit
+    def _to_classical(
+        p_,
+        f,
+        g,
+        h,
+        k,
+        L,
+        p, ecc, inc, raan, argp, nu,
+    ):
+
+        for idx in range(p_.shape[0]):
+            p[idx], ecc[idx], inc[idx], raan[idx], argp[idx], nu[idx] = mee2coe(
+                p_,
+                f,
+                g,
+                h,
+                k,
+                L,
+            )
