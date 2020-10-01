@@ -133,7 +133,7 @@ class ClassicalStateArray(BaseStateArray):
             self.nu.to(u.rad).value,
         )
 
-        return RVState(self.attractor, r * u.km, v * u.km / u.s, self.plane)
+        return RVStateArray(self.attractor, r * u.km, v * u.km / u.s, self.plane)
 
     def to_classical(self):
         """Converts to classical orbital elements representation."""
@@ -150,7 +150,7 @@ class ClassicalStateArray(BaseStateArray):
             self.nu.to(u.rad).value,
         )
 
-        return ModifiedEquinoctialState(
+        return ModifiedEquinoctialStateArray(
             self.attractor,
             p * u.km,
             f * u.rad,
@@ -192,7 +192,7 @@ class RVStateArray(BaseStateArray):
             self.v.to(u.km / u.s).value,
         )
 
-        return ClassicalState(
+        return ClassicalStateArray(
             self.attractor,
             p * u.km,
             ecc * u.one,
@@ -248,7 +248,7 @@ class ModifiedEquinoctialStateArray(BaseStateArray):
             self.L.to(u.rad).value,
         )
 
-        return ClassicalState(
+        return ClassicalStateArray(
             self.attractor,
             p * u.km,
             ecc * u.one,
